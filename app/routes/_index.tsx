@@ -24,7 +24,6 @@ interface Todo {
   dueDate: string;
 }
 
-
 export default function Index() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filter, setFIlter] = useState('all');
@@ -50,21 +49,17 @@ export default function Index() {
     // console.log(updatedTodos[0].isCompleted)
   }
 
-
   return (
     <div className="max-w-2xl mx-auto p-6 bg-blue-100 rounded-md m-8 border">
       <h1 className="text-3xl font-bold text-center mb-6 text-slate-800">Todo-ist</h1>
-
       <div className="flex justify-center m-4 ">
         <input type="text" name="search" onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="border border-gray-300 rounded-md px-4 py-2 w-full" id="" />
       </div>
-
       <div className="flex justify-between">
         <button onClick={() => setFIlter('completed')} className=" bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Show Completed</button>
         <button onClick={() => setFIlter('pending')} className=" bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Show Pending</button>
         <button onClick={() => setFIlter('all')} className=" bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Show All</button>
         <Link className=" bg-blue-400 text-white px-4 py-2 rounded-md hover:bg-blue-600" to='/create'>Create a new Todo</Link>
-
       </div>
 
       <div>

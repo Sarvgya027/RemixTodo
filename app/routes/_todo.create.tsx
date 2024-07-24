@@ -8,7 +8,7 @@ export async function action({ request }: ActionFunctionArgs) {
   // console.log(formData)
 
   const newTodo = {
-    id: Id,
+    id: Date.now(),
     title: formData.get("title"),
     description: formData.get("description"),
     isCompleted: false,
@@ -32,7 +32,7 @@ export default function Create() {
       const todos = JSON.parse(localStorage.getItem('todos') || '[]')
       todos.push(actionFormdata.newTodo)
       localStorage.setItem('todos', JSON.stringify(todos))
-      navigate('/')
+      navigate('/') 
     }
   }, [actionFormdata])
 
@@ -74,8 +74,8 @@ export default function Create() {
             type="datetime-local"
             name="dueDate"
             id="dueDate"
-            defaultValue={new Date().toLocaleString()}
-            min={new Date().toISOString()}
+            defaultValue={(new Date()).toTimeString()}
+            min={(new Date()).toTimeString()}
             required
           />
 
@@ -83,6 +83,6 @@ export default function Create() {
         </div>
       </Form>
 
-    </div>
+    </div>  
   )
 }

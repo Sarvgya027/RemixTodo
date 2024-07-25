@@ -1,12 +1,12 @@
 import { ActionFunctionArgs } from "@remix-run/node";
-import { Form, json, redirect, useActionData, useNavigate } from "@remix-run/react";
+import { Form, json, useActionData, useNavigate } from "@remix-run/react";
 import { useEffect } from "react";
+import { getTodosFromLocalStorage, Todo } from "~/utils/helpers/helper";
 
-let Id = Math.ceil(Math.random() * 999999)
+
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   // console.log(formData)
-
   const newTodo = {
     id: Date.now(),
     title: formData.get("title"),
@@ -16,8 +16,6 @@ export async function action({ request }: ActionFunctionArgs) {
     dueDate: formData.get('dueDate')
   }
   // console.log(newTodo)
-  // return redirect('/')
-
   return json({ newTodo })
 
 }
@@ -26,11 +24,10 @@ export default function Create() {
   const actionFormdata = useActionData<typeof action>();
   const navigate = useNavigate();
   // console.log(actionFormdata?.newTodo)
-
   useEffect(() => {
     if (actionFormdata?.newTodo) {
-      const todos = JSON.parse(localStorage.getItem('todos') || '[]')
-      todos.push(actionFormdata.newTodo)
+      const todos = getTodosFromLocalStorage();
+      todos.push(actionFormdata.newTodo as Todo)
       localStorage.setItem('todos', JSON.stringify(todos))
       navigate('/') 
     }

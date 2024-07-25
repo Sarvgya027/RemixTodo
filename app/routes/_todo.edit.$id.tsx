@@ -1,6 +1,7 @@
 import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
 import { Form, useActionData, useAsyncError, useLoaderData, useNavigate } from "@remix-run/react";
 import { useEffect, useState } from "react";
+import { Todo, getTodosFromLocalStorage } from "~/utils/helpers/helper";
 
 
 export const loader: LoaderFunction = async ({ params }) => {
@@ -22,41 +23,26 @@ export const action: ActionFunction = async ({ request }) => {
   return json({ updatedTodo })
 }
 
-interface Todo {
-  id: number;
-  title: string;
-  description: string;
-  isCompleted: boolean;
-  createdAt: string;
-  dueDate: string;
-}
-
 export default function Edit() {
   const { id } = useLoaderData<typeof loader>();
   const actionFormData = useActionData<typeof action>();
   const navigate = useNavigate();
   const [todo, setTodo] = useState<Todo | null>(null)
 
+  //effect for getting todos and setting to state
   useEffect(() => {
-    const todos = JSON.parse(localStorage.getItem('todos') || '[]')
-    const currentTodo = todos.find((todo: Todo) => todo.id === Number(id))
+    const todos = getTodosFromLocalStorage();
+    const currentTodo = todos.find((todo: Todo) => todo.id === Number(id)) || null;
     // console.log(currentTodo)
     setTodo(currentTodo)
 
   }, [id])
 
-  // useEffect(() => {
-  //   if (actionFormData?.newTodo) {
-  //     const todos = JSON.parse(localStorage.getItem('todos') || '[]')
-  //     todos.push(actionFormData.newTodo)
-  //     localStorage.setItem('todos', JSON.stringify(todos))
-  //     navigate('/')
-  //   }
-  // }, [actionFormData])
-
+  //effect for finding and updating existing todo
   useEffect(() => {
     if (actionFormData?.updatedTodo) {
-      const todos = JSON.parse(localStorage.getItem('todos') || '[]')
+      // const todos = JSON.parse(localStorage.getItem('todos') || '[]')
+      const todos = getTodosFromLocalStorage();
       const updatedTodos = todos.map((todo: Todo) => todo.id === actionFormData.updatedTodo.id ? actionFormData.updatedTodo : todo)
       localStorage.setItem('todos', JSON.stringify(updatedTodos))
       navigate('/')
@@ -77,9 +63,9 @@ export default function Edit() {
           <label htmlFor="dueDate" className="text-zinc-700 text-2xl font-semibold min-w-[300px] mt-4">Due date</label>
           <input className="border-zinc-400 rounded-md py-2 px-2  border" type="datetime-local" name="dueDate" id="dueDate" defaultValue={todo?.dueDate} required />
 
-          <input type="hidden" name="isCompleted" />
+          <input type="hidden" name="isCompleted" defaultValue={String(todo?.isCompleted)} />
           <input type="hidden" name="id" defaultValue={todo?.id} />
-          <input type="hidden" name="createdAt" />
+          <input type="hidden" name="createdAt" defaultValue={todo?.createdAt} />
 
           <button type="submit" className="bg-blue-400 text-white px-4 py-2 rounded-md mt-8 hover:bg-blue-600">Update</button>
         </div>

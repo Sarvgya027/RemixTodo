@@ -1,6 +1,6 @@
 import { deleteItem, readItems, updateItem } from "@directus/sdk";
 import type { ActionFunction, ActionFunctionArgs, LoaderFunction, MetaFunction } from "@remix-run/node";
-import { Form, json, Link, redirect, useLoaderData } from "@remix-run/react";
+import { Form, json, Link, redirect, useLoaderData, useParams } from "@remix-run/react";
 import { useState } from "react";
 import Logout from "~/components/Logout";
 import Navbar from "~/components/Navbar";
@@ -15,18 +15,19 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export const loader: LoaderFunction = async ({request}) => {
+export const loader: LoaderFunction = async ({ request, params }) => {
+
   const userId = await getUserIdFromRequest(request);
-  if(!userId) {
-    return redirect('/loginPage');
-  }
+  // console.log(userId)
+
   const todos = await directus.request(readItems('todos', {
     filter: {
-      user_id: userId
+      user_id: {
+        _eq: userId
+      }
     }
-  }))
-
-  return {todos, userId}
+  }));
+  return { todos, userId }
 };
 
 export const action: ActionFunction = async ({ request }: ActionFunctionArgs) => {

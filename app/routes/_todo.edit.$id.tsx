@@ -3,7 +3,7 @@ import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
 import { Form, redirect, useActionData, useFetcher, useLoaderData, useNavigate } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import directus from "~/lib/directus";
-import { Todo, getTodosFromLocalStorage } from "~/utils/helpers/helper";
+
 
 
 export const loader: LoaderFunction = async ({ params }) => {

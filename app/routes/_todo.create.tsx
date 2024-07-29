@@ -5,7 +5,10 @@ import directus from "~/lib/directus";
 import { getUserIdFromRequest } from "~/utils/helpers/helper";
 
 export async function action({ request }: ActionFunctionArgs) {
+
   const userId = await getUserIdFromRequest(request);
+  console.log(userId)
+
   if (!userId) {
     return redirect('/login');
   }

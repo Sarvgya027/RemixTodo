@@ -1,12 +1,12 @@
 import { deleteItem, readItems, updateItem } from "@directus/sdk";
 import type { ActionFunction, ActionFunctionArgs, LoaderFunction, MetaFunction } from "@remix-run/node";
-import { Form, json, Link, useLoaderData } from "@remix-run/react";
+import { Form, json, Link, redirect, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
 import Logout from "~/components/Logout";
 import Navbar from "~/components/Navbar";
 import TodoList from "~/components/TodoList";
 import directus from "~/lib/directus";
-import { Todo } from "~/utils/helpers/helper";
+import { getUserIdFromRequest, Todo } from "~/utils/helpers/helper";
 
 export const meta: MetaFunction = () => {
   return [
@@ -15,9 +15,18 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export const loader: LoaderFunction = async () => {
-  const todos = await directus.request(readItems('todos'));
-  return { todos };
+export const loader: LoaderFunction = async ({request}) => {
+  const userId = await getUserIdFromRequest(request);
+  if(!userId) {
+    return redirect('/loginPage');
+  }
+  const todos = await directus.request(readItems('todos', {
+    filter: {
+      user_id: userId
+    }
+  }))
+
+  return {todos, userId}
 };
 
 export const action: ActionFunction = async ({ request }: ActionFunctionArgs) => {
@@ -41,7 +50,7 @@ export const action: ActionFunction = async ({ request }: ActionFunctionArgs) =>
 };
 
 export default function Index() {
-  const { todos } = useLoaderData<typeof loader>();
+  const { todos, userId } = useLoaderData<typeof loader>();
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
   const [search, setSearch] = useState('');
 

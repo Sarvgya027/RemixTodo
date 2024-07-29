@@ -5,34 +5,30 @@ import directus from "~/lib/directus";
 import { getUserIdFromRequest } from "~/utils/helpers/helper";
 
 export async function action({ request }: ActionFunctionArgs) {
+  const userId = await getUserIdFromRequest(request);
+  if (!userId) {
+    return redirect('/login');
+  }
+  const formData = await request.formData();
 
-  
-
-
+  if (!formData) return null;
+  const newTodo = {
+    title: formData.get('title'),
+    description: formData.get('description'),
+    status: 'pending',
+    dueDate: formData.get('dueDate'),
+    user_id: userId 
+  }
 
   try {
-
-    const userId = await getUserIdFromRequest(request);
-    console.log("User ID from cookie:", userId);
-
-
-    const formData = await request.formData();
-
-    if (!formData) return null
-    const newTodo = {
-      title: formData.get('title'),
-      description: formData.get('description'),
-      status: 'pending',
-      dueDate: formData.get('dueDate')
-    }
-    const createdTodo = await directus.request(createItem('todos', newTodo))
-    // return json({ newTodo: createdTodo })
+    const createdTodo = await directus.request(createItem('todos', newTodo));
     return redirect('/');
   } catch (error) {
-    console.log('error while creating', error)
+    console.log('error while creating', error);
     return json({ error: 'Failed to create todo' }, { status: 500 });
   }
 }
+
 
 export default function Create() {
   // console.log(actionFormdata?.newTodo)

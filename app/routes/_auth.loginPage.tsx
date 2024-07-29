@@ -7,7 +7,7 @@ import Login from "~/components/Login";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
-  const email = formData.get("email") as string;
+  const email = formData.get("email") 
   const password = formData.get("password") as string;
 
   if (!email || !password) {
@@ -15,21 +15,31 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   try {
-    const loginResponse = await directus.request(login(email, password));
-    if (!loginResponse || !loginResponse.access_token) {
-      return json({ error: "Login failed. Please check your credentials." }, { status: 401 });
-    }
-    const userDetails = await client.request(readMe());
-    const userId = userDetails.id;
-    
-    //cookie helper function
-    const cookie = await setUserIdCookie(userId);
+    const loginResponse = await fetch('https://j2s3f783k2.tribecrafter.app/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        password,
+        
+      })
+    })
+    console.log(email)
+    console.log(password)
+    console.log(await loginResponse.json()) 
 
-    return redirect('/', {
-      headers: {
-        'Set-Cookie': cookie
-      }
-    });
+    // const userDetails = await client.request(readMe());
+    // const userId = userDetails.id;
+
+    // //cookie helper function
+    // const cookie = await setUserIdCookie(userId);
+
+    // return redirect('/', {
+    //   headers: {
+    //     'Set-Cookie': cookie
+    //   }
+    // });
+    // console.log();
+    return true
   } catch (error) {
     console.error("Login error:", error);
     return json({ error: "Login failed. Please try again." }, { status: 500 });

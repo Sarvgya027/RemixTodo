@@ -35,18 +35,19 @@ export const client = createDirectus(process.env.DIRECTUS_URL || '').with(authen
 
 // userId stored in http only cookie
 import { createCookie } from "@remix-run/node";
-
-// Helper function to set the user ID cookie
+//helper function to set cookie
 export const setUserIdCookie = async (userId: string) => {
   const userCookie = createCookie('user_id', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 30
+    path: '/',
+    maxAge: 60 * 60 * 24 * 30 
   });
 
   return await userCookie.serialize(userId);
 };
+
 
 // Helper function to get the user ID from the request
 export const getUserIdFromRequest = async (request: Request) => {
@@ -63,4 +64,19 @@ export const getUserIdFromRequest = async (request: Request) => {
     return cookies.user_id; 
   }
   return null;
+};
+
+
+// clearing cookie after logout function
+export const clearUserIdCookie = async () => {
+  const userCookie = createCookie('user_id', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+  });
+
+  return await userCookie.serialize('', {
+    maxAge: 0,
+  });
 };

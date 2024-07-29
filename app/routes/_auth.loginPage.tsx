@@ -7,7 +7,7 @@ import Login from "~/components/Login";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
-  const email = formData.get("email") 
+  const email = formData.get("email")
   const password = formData.get("password") as string;
 
   if (!email || !password) {
@@ -17,15 +17,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   try {
     const loginResponse = await fetch('https://j2s3f783k2.tribecrafter.app/auth/login', {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
-        email,
-        password,
-        
-      })
-    })
+        email: email,
+        password: password,
+      }),
+    });
     console.log(email)
     console.log(password)
-    console.log(await loginResponse.json()) 
+    console.log(await loginResponse.json())
 
     // const userDetails = await client.request(readMe());
     // const userId = userDetails.id;

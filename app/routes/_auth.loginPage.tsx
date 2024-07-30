@@ -12,7 +12,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (!email || !password) {
     return json({ error: "Email and password are required" }, { status: 400 });
   }
-
   try {
     const loginResponse = await fetch(`${process.env.DIRECTUS_URL}/auth/login`, {
       method: 'POST',

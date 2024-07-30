@@ -1,5 +1,5 @@
 import { deleteItem, readItems, updateItem } from "@directus/sdk";
-import type { ActionFunction, ActionFunctionArgs, LoaderFunction, MetaFunction } from "@remix-run/node";
+import { createCookie, type ActionFunction, type ActionFunctionArgs, type LoaderFunction, type MetaFunction } from "@remix-run/node";
 import { Form, json, Link, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
 import Navbar from "~/components/Navbar";
@@ -17,7 +17,16 @@ export const meta: MetaFunction = () => {
 export const loader: LoaderFunction = async ({ request, params }) => {
 
   const userId = await getUserIdFromRequest(request);
+  const accessToken = request.headers.get('Cookie')
+  if (!accessToken) return null;
+
+  const accessTokenCookie = await createCookie('access_token').parse(accessToken) 
+  // console.log(accessTokenCookie)
+
   // console.log(userId)
+
+
+  directus.setToken(accessTokenCookie);
 
   const todos = await directus.request(readItems('todos', {
     filter: {

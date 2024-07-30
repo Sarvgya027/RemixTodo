@@ -1,8 +1,12 @@
-import type { MetaFunction } from "@remix-run/node";
-import { Link } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import { deleteItem, readItems, updateItem } from "@directus/sdk";
+import type { ActionFunction, ActionFunctionArgs, LoaderFunction, MetaFunction } from "@remix-run/node";
+import { Form, json, Link, redirect, useLoaderData, useParams } from "@remix-run/react";
+import { useState } from "react";
+import Logout from "~/components/Logout";
+import Navbar from "~/components/Navbar";
 import TodoList from "~/components/TodoList";
-import { Todo, getTodosFromLocalStorage } from "~/utils/helpers/helper";
+import directus from "~/lib/directus";
+import { getUserIdFromRequest, Todo } from "~/utils/helpers/helper";
 
 export const meta: MetaFunction = () => {
   return [
@@ -11,58 +15,94 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export const loader: LoaderFunction = async ({ request, params }) => {
+
+  const userId = await getUserIdFromRequest(request);
+  // console.log(userId)
+
+  const todos = await directus.request(readItems('todos', {
+    filter: {
+      user_id: {
+        _eq: userId
+      }
+    }
+  }));
+  return { todos, userId }
+};
+
+export const action: ActionFunction = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData();
+  const id = formData.get('id');
+  const intent = formData.get('intent');
+
+  try {
+    if (intent === 'delete' && id) {
+      await directus.request(deleteItem('todos', id.toString()));
+      return json({ success: true });
+    } else if (intent === 'updateStatus' && id) {
+      const status = formData.get('status');
+      await directus.request(updateItem('todos', id.toString(), { status }));
+      return json({ success: true });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+  return json({ success: false });
+};
+
 export default function Index() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [filter, setFilter] = useState('all');
+  const { todos, userId } = useLoaderData<typeof loader>();
+  const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    const todos = getTodosFromLocalStorage(); //helper function
-    setTodos(todos)
-  }, [])
-
-//delete function for todo
-  const handleDelete = (id: number) => {
-    try {
-      const updatedTodos = todos.filter((todo) => todo.id !== id);
-      setTodos(updatedTodos);
-      localStorage.setItem('todos', JSON.stringify(updatedTodos));
-    } catch (error) {
-      console.error('Error deleting todo:', error);
-    }
-  };
-  
-//toggle function for completed tasks
-  const handleToggle = (id: number) => {
-    const updatedTodos = todos.map(todo =>
-      todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo
-    )
-    setTodos(updatedTodos)
-    localStorage.setItem('todos', JSON.stringify(updatedTodos))
-  }
-
-  //filter function && show isCompleted or pending based on ternary
-  const filteredTodos = todos.filter((todo) => (
-    (search.toLowerCase() === '' ? true : todo.title.toLowerCase().includes(search)) &&
-    (filter === 'all' ? true : (filter === 'completed' ? todo.isCompleted : !todo.isCompleted))
-  ))
+  const filteredTodos = todos.filter((todo: Todo) => {
+    const matchesSearch = search.toLowerCase() === '' ? true : todo.title.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter =
+      filter === 'all' ? true : (filter === 'completed' ? todo.status === 'completed' : todo.status === 'pending');
+    return matchesSearch && matchesFilter;
+  });
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-blue-100 rounded-md m-8 border">
-      <h1 className="text-3xl font-bold text-center mb-6 text-slate-800">Todo-ist</h1>
-      <div className="flex justify-center m-4 ">
-        <input type="text" name="search" onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="border border-gray-300 rounded-md px-4 py-2 w-full" id="" />
-      </div>
-      <div className="flex justify-between">
-        <button onClick={() => setFilter('completed')} className=" bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Show Completed</button>
-        <button onClick={() => setFilter('pending')} className=" bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Show Pending</button>
-        <button onClick={() => setFilter('all')} className=" bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Show All</button>
-        <Link className=" bg-blue-400 text-white px-4 py-2 rounded-md hover:bg-blue-600" to='/create'>Create a new Todo</Link>
-      </div>
+    <>
+      <Navbar />
+      <div className="max-w-2xl mx-auto p-6 bg-blue-100 rounded-md m-8 border">
 
-      <div>
-        <TodoList todos={filteredTodos} handleDelete={handleDelete} handleToggle={handleToggle} />
+        <div className="flex justify-center m-4">
+          <input
+            type="text"
+            name="search"
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search..."
+            className="border border-gray-300 rounded-md px-4 py-2 w-full"
+          />
+        </div>
+        <div className="flex justify-between mb-4">
+          <button
+            onClick={() => setFilter('completed')}
+            className={`px-4 py-2 rounded-md ${filter === 'completed' ? 'bg-blue-600' : 'bg-gray-500'} text-white hover:bg-blue-600`}
+          >
+            Show Completed
+          </button>
+          <button
+            onClick={() => setFilter('pending')}
+            className={`px-4 py-2 rounded-md ${filter === 'pending' ? 'bg-blue-600' : 'bg-gray-500'} text-white hover:bg-blue-600`}
+          >
+            Show Pending
+          </button>
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-4 py-2 rounded-md ${filter === 'all' ? 'bg-blue-600' : 'bg-gray-500'} text-white hover:bg-blue-600`}
+          >
+            Show All
+          </button>
+          <Link className="bg-blue-400 text-white px-4 py-2 rounded-md hover:bg-blue-600" to="/create">
+            Create a new Todo
+          </Link>
+        </div>
+        <div>
+          <TodoList todos={filteredTodos} />
+        </div>
       </div>
-    </div>
-  )
+    </>
+  );
 }

@@ -1,38 +1,40 @@
+import { createItem } from "@directus/sdk";
 import { ActionFunctionArgs } from "@remix-run/node";
-import { Form, json, useActionData, useNavigate } from "@remix-run/react";
-import { useEffect } from "react";
-import { getTodosFromLocalStorage, Todo } from "~/utils/helpers/helper";
-
+import { Form, json, redirect, useNavigate } from "@remix-run/react";
+import directus from "~/lib/directus";
+import { getUserIdFromRequest } from "~/utils/helpers/helper";
 
 export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  // console.log(formData)
-  const newTodo = {
-    id: Date.now(),
-    title: formData.get("title"),
-    description: formData.get("description"),
-    isCompleted: false,
-    createdAt: new Date().toLocaleString(),
-    dueDate: formData.get('dueDate')
-  }
-  // console.log(newTodo)
-  return json({ newTodo })
 
+  const userId = await getUserIdFromRequest(request);
+  console.log(userId)
+
+  if (!userId) {
+    return redirect('/login');
+  }
+  const formData = await request.formData();
+
+  if (!formData) return null;
+  const newTodo = {
+    title: formData.get('title'),
+    description: formData.get('description'),
+    status: 'pending',
+    dueDate: formData.get('dueDate'),
+    user_id: userId 
+  }
+
+  try {
+    const createdTodo = await directus.request(createItem('todos', newTodo));
+    return redirect('/');
+  } catch (error) {
+    console.log('error while creating', error);
+    return json({ error: 'Failed to create todo' }, { status: 500 });
+  }
 }
 
-export default function Create() {
-  const actionFormdata = useActionData<typeof action>();
-  const navigate = useNavigate();
-  // console.log(actionFormdata?.newTodo)
-  useEffect(() => {
-    if (actionFormdata?.newTodo) {
-      const todos = getTodosFromLocalStorage();
-      todos.push(actionFormdata.newTodo as Todo)
-      localStorage.setItem('todos', JSON.stringify(todos))
-      navigate('/') 
-    }
-  }, [actionFormdata])
 
+export default function Create() {
+  // console.log(actionFormdata?.newTodo)
 
   return (
     <div className=" mx-auto flex flex-col items-center justify-center my-10 ">
@@ -80,6 +82,6 @@ export default function Create() {
         </div>
       </Form>
 
-    </div>  
+    </div>
   )
 }

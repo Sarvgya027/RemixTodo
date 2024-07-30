@@ -1,8 +1,7 @@
 import { deleteItem, readItems, updateItem } from "@directus/sdk";
 import type { ActionFunction, ActionFunctionArgs, LoaderFunction, MetaFunction } from "@remix-run/node";
-import { Form, json, Link, redirect, useLoaderData, useParams } from "@remix-run/react";
+import { Form, json, Link, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
-import Logout from "~/components/Logout";
 import Navbar from "~/components/Navbar";
 import TodoList from "~/components/TodoList";
 import directus from "~/lib/directus";

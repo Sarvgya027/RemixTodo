@@ -1,16 +1,24 @@
 import { readItem, updateItem } from "@directus/sdk";
 import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
-import { Form, redirect, useActionData, useFetcher, useLoaderData, useNavigate } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import { redirect, useFetcher, useLoaderData } from "@remix-run/react";
 import directus from "~/lib/directus";
+import { getUserIdFromRequest } from "~/utils/helpers/helper";
 
 
 
-export const loader: LoaderFunction = async ({ params }) => {
+export const loader: LoaderFunction = async ({ params, request }) => {
+  const userId = await getUserIdFromRequest(request)
   const id = params.id
+  // console.log(id)
+  
   if (typeof id === 'string') {
     try {
       const todo = await directus.request(readItem('todos', id))
+
+      if (todo.user_id !== userId) {
+        return json({ error: "You do not have permission to edit this." }, { status: 403 });
+      }
+
       // console.log(todo)
       return json({ todo })
     } catch (error) {
@@ -21,8 +29,11 @@ export const loader: LoaderFunction = async ({ params }) => {
 }
 
 export const action: ActionFunction = async ({ request }) => {
+  const userId = getUserIdFromRequest(request)
   const formData = await request.formData();
   const id = formData.get('id');
+
+
   if (typeof id === 'string') {
     const updatedTodo = {
       id,

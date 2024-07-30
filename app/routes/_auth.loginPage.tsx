@@ -14,7 +14,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   try {
-    const loginResponse = await fetch('https://j2s3f783k2.tribecrafter.app/auth/login', {
+    const loginResponse = await fetch(`${process.env.DIRECTUS_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,7 +29,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const { data } = await loginResponse.json();
     const { access_token, refresh_token } = data;
 
-    const userResponse = await fetch('https://j2s3f783k2.tribecrafter.app/users/me', {
+    const userResponse = await fetch(`${process.env.DIRECTUS_URL}/users/me`, {
       headers: {
         'Authorization': `Bearer ${access_token}`
       }
@@ -62,11 +62,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const refreshTokenCookieValue = await refreshTokenCookie.serialize(refresh_token);
     const userIdCookieValue = await setUserIdCookie(userId);
 
+    // return redirect(`/`, {
+    //   headers: {
+    //     'Set-Cookie': `${accessTokenCookieValue}, ${refreshTokenCookieValue}, ${userIdCookieValue}`
+    //   }
+    // });
+
     return redirect(`/`, {
       headers: {
-        'Set-Cookie': `${accessTokenCookieValue}, ${refreshTokenCookieValue}, ${userIdCookieValue}`
+        'Set-Cookie': [
+          accessTokenCookieValue,
+          refreshTokenCookieValue,
+          userIdCookieValue
+        ].join(', ')
       }
     });
+
+
   } catch (error) {
     console.error("Login error:", error);
     return json({ error: "Login failed. Please try again." }, { status: 500 });

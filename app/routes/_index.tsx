@@ -1,5 +1,11 @@
 import { deleteItem, readItems, updateItem } from "@directus/sdk";
-import { createCookie, type ActionFunction, type ActionFunctionArgs, type LoaderFunction, type MetaFunction } from "@remix-run/node";
+import {
+  createCookie,
+  type ActionFunction,
+  type ActionFunctionArgs,
+  type LoaderFunction,
+  type MetaFunction,
+} from "@remix-run/node";
 import { Form, json, Link, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
 import Navbar from "~/components/Navbar";
@@ -15,41 +21,45 @@ export const meta: MetaFunction = () => {
 };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-
   const userId = await getUserIdFromRequest(request);
-  const accessToken = request.headers.get('Cookie')
+  const accessToken = request.headers.get("Cookie");
   if (!accessToken) return null;
 
-  const accessTokenCookie = await createCookie('access_token').parse(accessToken) 
+  const accessTokenCookie = await createCookie("access_token").parse(
+    accessToken
+  );
   // console.log(accessTokenCookie)
 
   // console.log(userId)
 
-
   directus.setToken(accessTokenCookie);
 
-  const todos = await directus.request(readItems('todos', {
-    filter: {
-      user_id: {
-        _eq: userId
-      }
-    }
-  }));
-  return { todos, userId }
+  const todos = await directus.request(
+    readItems("todos", {
+      filter: {
+        user_id: {
+          _eq: userId,
+        },
+      },
+    })
+  );
+  return { todos, userId };
 };
 
-export const action: ActionFunction = async ({ request }: ActionFunctionArgs) => {
+export const action: ActionFunction = async ({
+  request,
+}: ActionFunctionArgs) => {
   const formData = await request.formData();
-  const id = formData.get('id');
-  const intent = formData.get('intent');
+  const id = formData.get("id");
+  const intent = formData.get("intent");
 
   try {
-    if (intent === 'delete' && id) {
-      await directus.request(deleteItem('todos', id.toString()));
+    if (intent === "delete" && id) {
+      await directus.request(deleteItem("todos", id.toString()));
       return json({ success: true });
-    } else if (intent === 'updateStatus' && id) {
-      const status = formData.get('status');
-      await directus.request(updateItem('todos', id.toString(), { status }));
+    } else if (intent === "updateStatus" && id) {
+      const status = formData.get("status");
+      await directus.request(updateItem("todos", id.toString(), { status }));
       return json({ success: true });
     }
   } catch (error) {
@@ -60,13 +70,20 @@ export const action: ActionFunction = async ({ request }: ActionFunctionArgs) =>
 
 export default function Index() {
   const { todos, userId } = useLoaderData<typeof loader>();
-  const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
-  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<"all" | "completed" | "pending">("all");
+  const [search, setSearch] = useState("");
 
   const filteredTodos = todos.filter((todo: Todo) => {
-    const matchesSearch = search.toLowerCase() === '' ? true : todo.title.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch =
+      search.toLowerCase() === ""
+        ? true
+        : todo.title.toLowerCase().includes(search.toLowerCase());
     const matchesFilter =
-      filter === 'all' ? true : (filter === 'completed' ? todo.status === 'completed' : todo.status === 'pending');
+      filter === "all"
+        ? true
+        : filter === "completed"
+        ? todo.status === "completed"
+        : todo.status === "pending";
     return matchesSearch && matchesFilter;
   });
 
@@ -74,7 +91,6 @@ export default function Index() {
     <>
       <Navbar />
       <div className="max-w-2xl mx-auto p-6 bg-blue-100 rounded-md m-8 border">
-
         <div className="flex justify-center m-4">
           <input
             type="text"
@@ -86,24 +102,33 @@ export default function Index() {
         </div>
         <div className="flex justify-between mb-4">
           <button
-            onClick={() => setFilter('completed')}
-            className={`px-4 py-2 rounded-md ${filter === 'completed' ? 'bg-blue-600' : 'bg-gray-500'} text-white hover:bg-blue-600`}
+            onClick={() => setFilter("completed")}
+            className={`px-4 py-2 rounded-md ${
+              filter === "completed" ? "bg-blue-600" : "bg-gray-500"
+            } text-white hover:bg-blue-600`}
           >
-            Show Completed
+            Show Extra Completed
           </button>
           <button
-            onClick={() => setFilter('pending')}
-            className={`px-4 py-2 rounded-md ${filter === 'pending' ? 'bg-blue-600' : 'bg-gray-500'} text-white hover:bg-blue-600`}
+            onClick={() => setFilter("pending")}
+            className={`px-4 py-2 rounded-md ${
+              filter === "pending" ? "bg-blue-600" : "bg-gray-500"
+            } text-white hover:bg-blue-600`}
           >
             Show Pending
           </button>
           <button
-            onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-md ${filter === 'all' ? 'bg-blue-600' : 'bg-gray-500'} text-white hover:bg-blue-600`}
+            onClick={() => setFilter("all")}
+            className={`px-4 py-2 rounded-md ${
+              filter === "all" ? "bg-blue-600" : "bg-gray-500"
+            } text-white hover:bg-blue-600`}
           >
             Show All
           </button>
-          <Link className="bg-blue-400 text-white px-4 py-2 rounded-md hover:bg-blue-600" to="/create">
+          <Link
+            className="bg-blue-400 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+            to="/create"
+          >
             Create a new Todo
           </Link>
         </div>
